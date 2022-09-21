@@ -31,11 +31,36 @@ void Renderer::Render(Scene* pScene) const
 	{
 		for (int py{}; py < m_Height; ++py)
 		{
-			float gradient = px / static_cast<float>(m_Width);
-			gradient += py / static_cast<float>(m_Width);
-			gradient /= 2.0f;
 
-			ColorRGB finalColor{ gradient, gradient, gradient };
+			float ar{ float(m_Width) / float(m_Height) };
+
+			Vector3 rayDirection{};
+
+			rayDirection.x = (((2 * (px + 0.5f)) / m_Width) - 1) * ar;
+
+			rayDirection.y = 1 - ((2 * (py + 0.5f)) / m_Height);
+
+			rayDirection.z = 1.f;
+
+
+			rayDirection.Normalize();
+
+
+			Ray viewRay{ {0,0,0}, rayDirection };
+
+			ColorRGB finalColor{};
+
+			HitRecord closestHit{};
+
+			pScene->GetClosestHit(viewRay, closestHit);
+
+			if (closestHit.didHit)
+			{
+				finalColor = materials[closestHit.materialIndex]->Shade();
+
+				/*const float scaled_t = closestHit.t / 500.f;
+				finalColor = { scaled_t, scaled_t, scaled_t };*/
+			}
 
 			//Update Color in Buffer
 			finalColor.MaxToOne();
@@ -46,6 +71,20 @@ void Renderer::Render(Scene* pScene) const
 				static_cast<uint8_t>(finalColor.b * 255));
 		}
 	}
+
+
+	//test if dot and cross product implementation works
+
+		/*float dotResult{};
+
+		dotResult = Vector3::Dot(Vector3::UnitX, Vector3::UnitX);
+		dotResult = Vector3::Dot(Vector3::UnitX, -Vector3::UnitX);
+		dotResult = Vector3::Dot(Vector3::UnitX, Vector3::UnitY);
+
+
+		Vector3 crossResult{};
+		crossResult = Vector3::Cross(Vector3::UnitZ, Vector3::UnitX);
+		crossResult = Vector3::Cross(Vector3::UnitX, Vector3::UnitZ);*/
 
 	//@END
 	//Update SDL Surface
