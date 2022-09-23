@@ -20,11 +20,12 @@ namespace dae
 
 			C = Vector3::Dot(ray.origin - sphere.origin, ray.origin - sphere.origin) - (sphere.radius * sphere.radius);
 
-			D = sqrtf((B * B) - (4 * A * C));
+			D = (B * B) - (4 * A * C);
 
 			if (D > FLT_EPSILON)
 			{
-				
+				D = sqrtf(D);
+
 				float t1{}, t2{};
 				t1 = (-B + D) / (2 * A);
 				t2 = (-B - D) / (2 * A);
