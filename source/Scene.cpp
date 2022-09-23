@@ -35,7 +35,7 @@ namespace dae {
 
 			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, tempHit))
 			{
-				if((closestHit.t > tempHit.t || AreEqual(closestHit.t, 0.f)))
+				if(tempHit.t <  closestHit.t)
 				{
 					closestHit.t = tempHit.t;
 					closestHit.didHit = true;
@@ -50,8 +50,9 @@ namespace dae {
 
 			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, tempHit))
 			{
-				if ((closestHit.t > tempHit.t || AreEqual(closestHit.t, 0.f)))
+				if (tempHit.t < closestHit.t)
 				{
+
 					closestHit.t = tempHit.t;
 					closestHit.didHit = true;
 					closestHit.materialIndex = tempHit.materialIndex;

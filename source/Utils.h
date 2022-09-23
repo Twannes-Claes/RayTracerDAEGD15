@@ -22,19 +22,9 @@ namespace dae
 
 			D = sqrtf((B * B) - (4 * A * C));
 
-			if (AreEqual(D, 0.f))
-			{
-				hitRecord.didHit = true;
-
-				hitRecord.t = B / (2*A);
-
-				hitRecord.materialIndex = sphere.materialIndex;
-			}
-
 			if (D > FLT_EPSILON)
 			{
-				hitRecord.didHit = true;
-
+				
 				float t1{}, t2{};
 				t1 = (-B + D) / (2 * A);
 				t2 = (-B - D) / (2 * A);
@@ -47,6 +37,15 @@ namespace dae
 				{
 					hitRecord.t = t1;
 				}
+
+				hitRecord.materialIndex = sphere.materialIndex;
+				hitRecord.didHit = true;
+			}
+			else if (AreEqual(D, 0.f))
+			{
+				hitRecord.didHit = true;
+
+				hitRecord.t = -B / (2 * A);
 
 				hitRecord.materialIndex = sphere.materialIndex;
 			}
