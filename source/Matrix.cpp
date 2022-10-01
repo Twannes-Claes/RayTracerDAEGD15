@@ -103,12 +103,12 @@ namespace dae {
 	}
 
 	Matrix Matrix::CreateTranslation(float x, float y, float z)
-	{
+	{	
 		Matrix matrix{};
 
-		matrix[0][3] = x;
-		matrix[1][3] = y;
-		matrix[2][3] = z;
+		matrix[3][0] = x;
+		matrix[3][1] = y;
+		matrix[3][2] = z;
 
 		return matrix;
 	}
@@ -122,7 +122,6 @@ namespace dae {
 	{
 		Matrix matrix{};
 
-		matrix[0][0] = 1;
 		matrix[1][1] = cosf(pitch);
 		matrix[1][2] = -sinf(pitch);
 		matrix[2][1] = sinf(pitch);
@@ -136,7 +135,6 @@ namespace dae {
 		Matrix matrix{};
 
 		matrix[0][0] = cosf(yaw);
-		matrix[1][1] = 1;
 		matrix[0][2] = -sinf(yaw);
 		matrix[2][0] = sinf(yaw);
 		matrix[2][2] = cosf(yaw);
@@ -152,7 +150,6 @@ namespace dae {
 		matrix[0][1] = sinf(roll);
 		matrix[1][0] = -sinf(roll);
 		matrix[1][1] = cosf(roll);
-		matrix[2][2] = 1;
 
 		return matrix;
 	}

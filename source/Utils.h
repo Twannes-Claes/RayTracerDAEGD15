@@ -22,6 +22,44 @@ namespace dae
 
 			D = (B * B) - (4 * A * C);
 
+			//remaking the code because there is way tooooo many ifs, it could be way efficienter
+
+			//first calculating if it doesnt hit anything or the things it hit are negative or not allowed in case return false the rest you can return true and assign 
+			// the hitrecord
+
+			if (D < 0)
+			{
+				return false;
+			}
+
+			D = sqrtf(D);
+
+			float t{ (-B - D) / (2 * A) };
+			//check if first intersection is allowed
+			if (t < ray.min || t > ray.max)
+			{
+				//if not check the second one
+				t = (-B + D) / (2 * A);
+
+				if (t < ray.min || t > ray.max)
+				{
+					//both arent allowed so return false
+					return false;
+				}
+			}
+
+			if (!ignoreHitRecord)
+			{
+				hitRecord.didHit = true;
+				hitRecord.t = t;
+				hitRecord.materialIndex = sphere.materialIndex;
+				hitRecord.origin = ray.origin + (ray.direction * hitRecord.t);
+				hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+			}
+
+			return true;
+
+#pragma region Unoptimized code
 			if (D > FLT_EPSILON)
 			{
 				D = sqrtf(D);
@@ -29,6 +67,11 @@ namespace dae
 				float t1{}, t2{};
 				t1 = (-B + D) / (2 * A);
 				t2 = (-B - D) / (2 * A);
+
+				if (t1 < 0 && t2 < 0)
+				{
+					return false;
+				}
 
 				if (t1 > t2)
 				{
@@ -39,19 +82,58 @@ namespace dae
 					hitRecord.t = t1;
 				}
 
-				hitRecord.materialIndex = sphere.materialIndex;
-				hitRecord.didHit = true;
+				if (t1 < 0)
+				{
+					hitRecord.t = t2;
+				}
+				else if (t2 < 0)
+				{
+					hitRecord.t = t1;
+				}
+
+				if (hitRecord.t > ray.min && hitRecord.t < ray.max)
+				{
+					if (ignoreHitRecord)
+					{
+						return true;
+					}
+
+					hitRecord.didHit = true;
+					hitRecord.materialIndex = sphere.materialIndex;
+					hitRecord.origin = ray.origin + (ray.direction * hitRecord.t);
+					hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+
+					return true;
+				}
 			}
 			else if (AreEqual(D, 0.f))
 			{
-				hitRecord.didHit = true;
 
-				hitRecord.t = -B / (2 * A);
+				float t = (-B) / (2 * A);;
 
-				hitRecord.materialIndex = sphere.materialIndex;
+				if (t < 0)
+				{
+					return false;
+				}
+
+				if (t > ray.min && t < ray.max)
+				{
+					if (ignoreHitRecord)
+					{
+						return true;
+					}
+
+					hitRecord.t = t;
+					hitRecord.didHit = true;
+					hitRecord.materialIndex = sphere.materialIndex;
+					hitRecord.origin = ray.origin + (ray.direction * hitRecord.t);
+					hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+
+					return true;
+				}
 			}
-
-			return hitRecord.didHit;
+			return false;
+#pragma endregion
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
@@ -68,11 +150,13 @@ namespace dae
 
 			t = (Vector3::Dot(plane.origin - ray.origin,plane.normal)) / (Vector3::Dot(ray.direction, plane.normal));
 
-			if (t > FLT_EPSILON)
+			if (t > ray.min && t < ray.max)
 			{
 				hitRecord.didHit = true;
 				hitRecord.t = t;
 				hitRecord.materialIndex = plane.materialIndex;
+				hitRecord.origin = ray.origin + (ray.direction * hitRecord.t);
+				hitRecord.normal = plane.normal;
 			}
 			
 			return hitRecord.didHit;
@@ -120,9 +204,17 @@ namespace dae
 		//Direction from target to light
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
-			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+
+			if (light.type == LightType::Directional)
+			{
+				return {};
+			}
+
+			if (light.type == LightType::Point)
+			{
+				return light.origin - origin;
+			}
+	
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)

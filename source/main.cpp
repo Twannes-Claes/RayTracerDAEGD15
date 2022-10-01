@@ -41,11 +41,13 @@ int main(int argc, char* args[])
 	if (!pWindow)
 		return 1;
 
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+
 	//Initialize "framework"
 	const auto pTimer = new Timer();
 	const auto pRenderer = new Renderer(pWindow);
 
-	const auto pScene = new Scene_W1();
+	const auto pScene = new Scene_W2();
 	pScene->Initialize();
 
 	//Start loop
