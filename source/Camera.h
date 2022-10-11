@@ -61,7 +61,6 @@ namespace dae
 			//Mouse Input
 			int mouseX{}, mouseY{};
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
-
 			
 			float moveSpeed{ 10.f * deltaTime };
 			float rotSpeed{ (10.f * TO_RADIANS) * deltaTime };
@@ -77,12 +76,11 @@ namespace dae
 
 			bool lmb = mouseState == SDL_BUTTON_LMASK;
 			bool rmb = mouseState == SDL_BUTTON_RMASK;
-			//xor for left and right to be true when both are pressed
 
-			bool lrmb = mouseState == (SDL_BUTTON_LMASK ^ SDL_BUTTON_RMASK);
+			bool lrmb = mouseState == (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK);
 
-			//origin -= lmb * forward * moveSpeed * static_cast<float>(mouseY);
-			origin -= lrmb * up * (moveSpeed / 3) * mouseY;
+			//origin -= lmb * forward * moveSpeed * float(mouseY);
+			origin -= lrmb * up * (moveSpeed / 3) * float(mouseY);
 
 			totalPitch -= lmb * rotSpeed * mouseY;
 			totalPitch -= rmb * rotSpeed * mouseY;

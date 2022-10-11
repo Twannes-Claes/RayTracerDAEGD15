@@ -60,7 +60,7 @@ namespace dae
 			return true;
 
 #pragma region Unoptimized code
-			if (D > FLT_EPSILON)
+			/*if (D > FLT_EPSILON)
 			{
 				D = sqrtf(D);
 
@@ -132,7 +132,7 @@ namespace dae
 					return true;
 				}
 			}
-			return false;
+			return false;*/
 #pragma endregion
 		}
 
@@ -209,19 +209,27 @@ namespace dae
 			{
 				return {};
 			}
-
-			if (light.type == LightType::Point)
+			else
 			{
+				//Lighttype Point
 				return light.origin - origin;
 			}
-	
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)
 		{
 			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+			
+			if (light.type == LightType::Point)
+			{
+				Vector3 irridanceVector{ light.origin - target };
+
+				return light.color * (light.intensity / Vector3::Dot(irridanceVector, irridanceVector));
+			}
+			else
+			{
+				return light.color * light.intensity;
+			}
 		}
 	}
 
