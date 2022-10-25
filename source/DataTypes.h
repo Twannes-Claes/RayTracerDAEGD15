@@ -42,11 +42,14 @@ namespace dae
 			const Vector3 edgeV0V1 = v1 - v0;
 			const Vector3 edgeV0V2 = v2 - v0;
 			normal = Vector3::Cross(edgeV0V1, edgeV0V2).Normalized();
+			//center = (v0 + v1 + v2) / 3;
 		}
 
 		Vector3 v0{};
 		Vector3 v1{};
 		Vector3 v2{};
+
+		//Vector3 center{};
 
 		Vector3 normal{};
 
@@ -123,20 +126,33 @@ namespace dae
 
 		void CalculateNormals()
 		{
-			assert(false && "No Implemented Yet!");
+			normals.resize(indices.size() / 3);
+
+			for (int i{}; i < indices.size();  i +=3)
+			{
+				Vector3 v0 = positions[indices[i]];
+
+				normals[i/3] = Vector3::Cross(positions[indices[i + 1]] - v0, positions[indices[i + 2]] - v0).Normalized();
+			}
 		}
 
 		void UpdateTransforms()
 		{
-			assert(false && "No Implemented Yet!");
-			//Calculate Final Transform 
-			//const auto finalTransform = ...
+			const Matrix SRT{ scaleTransform  * rotationTransform * translationTransform };
 
-			//Transform Positions (positions > transformedPositions)
-			//...
+			transformedPositions.resize(positions.size());
 
-			//Transform Normals (normals > transformedNormals)
-			//...
+			for (int i{}; i < positions.size(); ++i)
+			{
+				transformedPositions[i] = SRT.TransformPoint(positions[i]);
+			}
+
+			transformedNormals.resize(normals.size());
+
+			for (int i{}; i < normals.size(); ++i)
+			{
+				transformedNormals[i] = SRT.TransformVector(normals[i]);
+			}
 		}
 	};
 #pragma endregion

@@ -27,6 +27,10 @@ namespace dae
 
 		void ToggleShadow() { m_ShadowsEnabled = !m_ShadowsEnabled; }
 
+		bool getCameraLock() const { return m_IsCamLocked; }
+
+		void SetCameraLock(bool expression) { m_IsCamLocked = expression; }
+
 	private:
 
 		enum class LightingMode
@@ -41,7 +45,8 @@ namespace dae
 
 		LightingMode m_CurrentLightingMode{ LightingMode::Combined };
 
-		bool m_ShadowsEnabled{ true };
+		bool m_ShadowsEnabled{ false };
+		bool m_IsCamLocked{ true };
 
 		SDL_Window* m_pWindow{};
 

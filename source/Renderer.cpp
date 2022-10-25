@@ -77,7 +77,6 @@ void Renderer::Render(Scene* pScene) const
 
 							if (pScene->DoesHit(shadowRay))
 							{
-								finalColor = finalColor * 0.95f;
 								continue;
 							}
 						}

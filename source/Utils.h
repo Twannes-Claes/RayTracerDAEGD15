@@ -150,7 +150,12 @@ namespace dae
 
 			t = (Vector3::Dot(plane.origin - ray.origin,plane.normal)) / (Vector3::Dot(ray.direction, plane.normal));
 
-			if (t > ray.min && t < ray.max)
+			if (t < ray.min || t > ray.max)
+			{
+				return false;
+			}
+
+			if (!ignoreHitRecord)
 			{
 				hitRecord.didHit = true;
 				hitRecord.t = t;
@@ -159,7 +164,7 @@ namespace dae
 				hitRecord.normal = plane.normal;
 			}
 			
-			return hitRecord.didHit;
+			return true;
 		}
 
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray)
@@ -172,9 +177,63 @@ namespace dae
 		//TRIANGLE HIT-TESTS
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W5
-			assert(false && "No Implemented Yet!");
-			return false;
+
+			float dotNV{ Vector3::Dot(triangle.normal, ray.direction) };
+
+			if ( dotNV == 0) { return false; }
+			
+			TriangleCullMode cullMode{ triangle.cullMode };
+			
+			if(ignoreHitRecord)
+			{
+				if (cullMode == TriangleCullMode::BackFaceCulling) { cullMode = TriangleCullMode::FrontFaceCulling; }
+				else if (cullMode == TriangleCullMode::FrontFaceCulling) { cullMode = TriangleCullMode::BackFaceCulling; }
+			} 
+
+			switch (cullMode)
+			{
+				case TriangleCullMode::FrontFaceCulling:
+				{
+					if (dotNV < 0) { return false; }
+				}
+				break;
+				case TriangleCullMode::BackFaceCulling:
+				{
+					if (dotNV > 0) { return false; }
+				}
+				break;
+				default:
+				break;
+			}
+			
+			Vector3 center{ (triangle.v0 + triangle.v1 + triangle.v2) / 3 };
+
+			float t = Vector3::Dot(center - ray.origin, triangle.normal) / Vector3::Dot(ray.direction, triangle.normal);
+
+			if (t < ray.min || t > ray.max) { return false; }
+
+			Vector3 p{ ray.origin + ( t * ray.direction)};
+
+			Vector3 poinToSide{ p - triangle.v0 };
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(triangle.v1 - triangle.v0, poinToSide)) < 0) { return false; }
+
+			poinToSide = p - triangle.v1;
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(triangle.v2 - triangle.v1, poinToSide)) < 0) { return false; }
+
+			poinToSide = p - triangle.v2;
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(triangle.v0 - triangle.v2, poinToSide)) < 0) { return false; }
+
+			if (!ignoreHitRecord)
+			{
+				hitRecord.didHit = true;
+				hitRecord.t = t;
+				hitRecord.origin = p;
+				hitRecord.materialIndex = triangle.materialIndex;
+				hitRecord.normal = triangle.normal;
+			}
+
+			return true;
+
 		}
 
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray)
@@ -186,9 +245,40 @@ namespace dae
 #pragma region TriangeMesh HitTest
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W5
-			assert(false && "No Implemented Yet!");
-			return false;
+			HitRecord tempHit{};
+
+			bool hasHit{ false };
+
+			for (int i{}; i < mesh.indices.size(); i+= 3)
+			{
+
+
+				Vector3 v0{ mesh.transformedPositions[mesh.indices[i]]};
+				Vector3 v1{ mesh.transformedPositions[mesh.indices[i + 1]]};
+				Vector3 v2{ mesh.transformedPositions[mesh.indices[i + 2]]};
+
+				Triangle temp{ v0,v1,v2, mesh.transformedNormals[i/3] };
+
+				temp.materialIndex = mesh.materialIndex;
+				temp.cullMode = mesh.cullMode;
+
+				if (HitTest_Triangle(temp,ray, tempHit, ignoreHitRecord))
+				{
+					hasHit = true;
+
+					if (ignoreHitRecord)
+					{
+						return true;
+					}
+
+					if (tempHit.t < hitRecord.t)
+					{
+						hitRecord = tempHit;
+					}
+				}
+			}
+
+			return hasHit;
 		}
 
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)

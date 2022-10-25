@@ -123,8 +123,8 @@ namespace dae {
 		Matrix matrix{};
 
 		matrix[1][1] = cosf(pitch);
-		matrix[1][2] = -sinf(pitch);
 		matrix[2][1] = sinf(pitch);
+		matrix[1][2] = -sinf(pitch);
 		matrix[2][2] = cosf(pitch);
 
 		return matrix;
@@ -147,8 +147,8 @@ namespace dae {
 		Matrix matrix{};
 
 		matrix[0][0] = cosf(roll);
-		matrix[0][1] = sinf(roll);
 		matrix[1][0] = -sinf(roll);
+		matrix[0][1] = sinf(roll);
 		matrix[1][1] = cosf(roll);
 
 		return matrix;

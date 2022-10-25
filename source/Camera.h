@@ -5,6 +5,7 @@
 
 #include "Math.h"
 #include "Timer.h"
+#include <iostream>
 
 namespace dae
 {
@@ -30,7 +31,6 @@ namespace dae
 		float totalYaw{0.f};
 
 		Matrix cameraToWorld{};
-
 
 		Matrix CalculateCameraToWorld()
 		{
@@ -79,6 +79,8 @@ namespace dae
 
 			bool lrmb = mouseState == (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK);
 
+			//std::cout << mouseState << '\n';
+
 			//origin -= lmb * forward * moveSpeed * float(mouseY);
 			origin -= lrmb * up * (moveSpeed / 3) * float(mouseY);
 
@@ -87,7 +89,7 @@ namespace dae
 			totalYaw += lmb * rotSpeed * mouseX;
 			totalYaw += rmb * rotSpeed * mouseX;
 			
-			Matrix totalRotation = Matrix::CreateRotationX(totalPitch) * Matrix::CreateRotationY(totalYaw);
+			Matrix totalRotation{ Matrix::CreateRotationX(totalPitch) * Matrix::CreateRotationY(totalYaw) };
 
 			forward = totalRotation.TransformVector(Vector3::UnitZ);
 

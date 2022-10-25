@@ -47,7 +47,7 @@ int main(int argc, char* args[])
 	const auto pTimer = new Timer();
 	const auto pRenderer = new Renderer(pWindow);
 
-	const auto pScene = new Scene_W3();
+	const auto pScene = new Scene_W4_ReferenceScene();
 	pScene->Initialize();
 
 	//Start loop
@@ -77,6 +77,20 @@ int main(int argc, char* args[])
 				if (e.key.keysym.scancode == SDL_SCANCODE_F3)
 				{
 					pRenderer->CycleLightingMode();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_LCTRL)
+				{
+					pRenderer->SetCameraLock(!pRenderer->getCameraLock());
+
+					if (!pRenderer->getCameraLock())
+					{
+						SDL_SetRelativeMouseMode(SDL_FALSE);
+					}
+					else
+					{
+						SDL_SetRelativeMouseMode(SDL_TRUE);
+
+					}
 				}
 				break;
 			}
