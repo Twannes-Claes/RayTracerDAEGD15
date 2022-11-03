@@ -30,6 +30,8 @@ namespace dae
 		float totalPitch{0.f};
 		float totalYaw{0.f};
 
+		const float speed{ 10.f };
+
 		Matrix cameraToWorld{};
 
 		Matrix CalculateCameraToWorld()
@@ -39,7 +41,7 @@ namespace dae
 
 			up = Vector3::Cross(forward, right);
 
-			Matrix output
+			cameraToWorld = Matrix
 			{
 				right,
 				up,
@@ -47,7 +49,7 @@ namespace dae
 				origin
 			};
 
-			return output;
+			return cameraToWorld;
 		}
 
 		void Update(Timer* pTimer)
@@ -62,14 +64,18 @@ namespace dae
 			int mouseX{}, mouseY{};
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 			
-			float moveSpeed{ 10.f * deltaTime };
-			float rotSpeed{ (10.f * TO_RADIANS) * deltaTime };
+			float moveSpeed{ speed * deltaTime };
+			float rotSpeed{ (speed * TO_RADIANS) * deltaTime };
 
-			origin += pKeyboardState[SDL_SCANCODE_W] * forward * moveSpeed;
-			origin -= pKeyboardState[SDL_SCANCODE_S] * forward * moveSpeed;
+			const int sprintSpeedMultiplier{ 3 };
 
-			origin -= pKeyboardState[SDL_SCANCODE_A] * right * moveSpeed;
-			origin += pKeyboardState[SDL_SCANCODE_D] * right * moveSpeed;
+			moveSpeed = (pKeyboardState[SDL_SCANCODE_LSHIFT] * (sprintSpeedMultiplier) * moveSpeed) + moveSpeed;
+
+			origin += (pKeyboardState[SDL_SCANCODE_W] || pKeyboardState[SDL_SCANCODE_UP])  * forward * moveSpeed;
+			origin -= (pKeyboardState[SDL_SCANCODE_S] || pKeyboardState[SDL_SCANCODE_DOWN]) * forward * moveSpeed;
+
+			origin -= (pKeyboardState[SDL_SCANCODE_A] || pKeyboardState[SDL_SCANCODE_LEFT]) * right * moveSpeed;
+			origin += (pKeyboardState[SDL_SCANCODE_D] || pKeyboardState[SDL_SCANCODE_RIGHT]) * right * moveSpeed;
 
 			origin -= pKeyboardState[SDL_SCANCODE_Q] * up * moveSpeed;
 			origin += pKeyboardState[SDL_SCANCODE_E] * up * moveSpeed;
@@ -81,10 +87,10 @@ namespace dae
 
 			//std::cout << mouseState << '\n';
 
-			//origin -= lmb * forward * moveSpeed * float(mouseY);
+			origin -= lmb * forward * moveSpeed * float(mouseY);
 			origin -= lrmb * up * (moveSpeed / 3) * float(mouseY);
 
-			totalPitch -= lmb * rotSpeed * mouseY;
+			//totalPitch -= lmb * rotSpeed * mouseY;
 			totalPitch -= rmb * rotSpeed * mouseY;
 			totalYaw += lmb * rotSpeed * mouseX;
 			totalYaw += rmb * rotSpeed * mouseX;

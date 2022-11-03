@@ -13,12 +13,12 @@ namespace dae
 		 */
 		static ColorRGB Lambert(float kd, const ColorRGB& cd)
 		{
-			return (kd * cd) / float(PI);
+			return (kd * cd) * PI_INV;
 		}
 
 		static ColorRGB Lambert(const ColorRGB& kd, const ColorRGB& cd)
 		{
-			return (kd * cd) / float(PI);
+			return (kd * cd) * PI_INV;
 		}
 
 		/**
@@ -80,7 +80,7 @@ namespace dae
 		 */
 		static float GeometryFunction_SchlickGGX(const Vector3& n, const Vector3& v, float roughness)
 		{
-			const float k{ Square(roughness + 1) / 8};
+			const float k{ Square(roughness + 1) * 0.125f};
 
 			float dotNV{ Vector3::Dot(n,v) };
 

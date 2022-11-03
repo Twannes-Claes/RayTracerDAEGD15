@@ -48,6 +48,8 @@ int main(int argc, char* args[])
 	const auto pRenderer = new Renderer(pWindow);
 
 	const auto pScene = new Scene_W4_ReferenceScene();
+	//const auto pScene = new Scene_W4_Bunny();
+
 	pScene->Initialize();
 
 	//Start loop
@@ -55,30 +57,34 @@ int main(int argc, char* args[])
 	float printTimer = 0.f;
 	bool isLooping = true;
 	bool takeScreenshot = false;
+
 	while (isLooping)
 	{
 		//--------- Get input events ---------
 		SDL_Event e;
+
 		while (SDL_PollEvent(&e))
 		{
 			switch (e.type)
 			{
-			case SDL_QUIT:
-				isLooping = false;
-				break;
-			case SDL_KEYUP:
-				if(e.key.keysym.scancode == SDL_SCANCODE_X)
-					takeScreenshot = true;
+				case SDL_QUIT:
+					isLooping = false;
+					break;
+				case SDL_KEYUP:
 
-				if (e.key.keysym.scancode == SDL_SCANCODE_F2)
+				if (e.key.keysym.scancode == SDL_SCANCODE_X)
+				{
+					takeScreenshot = true;
+				}
+				else if (e.key.keysym.scancode == SDL_SCANCODE_F2)
 				{
 					pRenderer->ToggleShadow();
 				}
-				if (e.key.keysym.scancode == SDL_SCANCODE_F3)
+				else if (e.key.keysym.scancode == SDL_SCANCODE_F3)
 				{
 					pRenderer->CycleLightingMode();
 				}
-				if (e.key.keysym.scancode == SDL_SCANCODE_LCTRL)
+				else if (e.key.keysym.scancode == SDL_SCANCODE_LCTRL)
 				{
 					pRenderer->SetCameraLock(!pRenderer->getCameraLock());
 
@@ -92,6 +98,10 @@ int main(int argc, char* args[])
 
 					}
 				}
+				else if (e.key.keysym.scancode == SDL_SCANCODE_F6)
+				{
+					pTimer->StartBenchmark();
+				}
 				break;
 			}
 		}
@@ -104,7 +114,9 @@ int main(int argc, char* args[])
 
 		//--------- Timer ---------
 		pTimer->Update();
+
 		printTimer += pTimer->GetElapsed();
+
 		if (printTimer >= 1.f)
 		{
 			printTimer = 0.f;
