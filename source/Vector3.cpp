@@ -1,7 +1,7 @@
 #include "Vector3.h"
 
 #include <cassert>
-
+#include <xmmintrin.h>
 #include "Vector4.h"
 #include <cmath>
 
@@ -19,7 +19,9 @@ namespace dae {
 
 	float Vector3::Magnitude() const
 	{
-		return sqrtf(x * x + y * y + z * z);
+		//https://geometrian.com/programming/tutorials/fastsqrt/index.php
+
+		return _mm_cvtss_f32(_mm_sqrt_ss(_mm_set_ps1(x * x + y * y + z * z)));
 	}
 
 	float Vector3::SqrMagnitude() const

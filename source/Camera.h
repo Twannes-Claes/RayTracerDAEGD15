@@ -37,9 +37,9 @@ namespace dae
 		Matrix CalculateCameraToWorld()
 		{
 
-			right = Vector3::Cross(Vector3::UnitY, forward);
+			right = Vector3::Cross(Vector3::UnitY, forward).Normalized();
 
-			up = Vector3::Cross(forward, right);
+			up = Vector3::Cross(forward, right).Normalized();
 
 			cameraToWorld = Matrix
 			{
@@ -58,7 +58,6 @@ namespace dae
 
 			//Keyboard Input
 			const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
-
 
 			//Mouse Input
 			int mouseX{}, mouseY{};
@@ -85,19 +84,14 @@ namespace dae
 
 			bool lrmb = mouseState == (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK);
 
-			//std::cout << mouseState << '\n';
-
 			origin -= lmb * forward * moveSpeed * float(mouseY);
 			origin -= lrmb * up * (moveSpeed / 3) * float(mouseY);
 
-			//totalPitch -= lmb * rotSpeed * mouseY;
 			totalPitch -= rmb * rotSpeed * mouseY;
 			totalYaw += lmb * rotSpeed * mouseX;
 			totalYaw += rmb * rotSpeed * mouseX;
-			
-			Matrix totalRotation{ Matrix::CreateRotationX(totalPitch) * Matrix::CreateRotationY(totalYaw) };
 
-			forward = totalRotation.TransformVector(Vector3::UnitZ);
+			forward = (Matrix::CreateRotationX(totalPitch) * Matrix::CreateRotationY(totalYaw)).TransformVector(Vector3::UnitZ);
 
 			forward.Normalize();
 		}

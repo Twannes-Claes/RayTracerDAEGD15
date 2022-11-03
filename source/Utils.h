@@ -3,9 +3,20 @@
 #include <fstream>
 #include "Math.h"
 #include "DataTypes.h"
+#include <xmmintrin.h>
 
 namespace dae
 {
+	namespace Utils
+	{
+		//https://geometrian.com/programming/tutorials/fastsqrt/index.php
+
+		inline float FastSqrt(float arg)
+		{
+			return _mm_cvtss_f32(_mm_sqrt_ss(_mm_set_ps1(arg)));
+		}
+	}
+
 	namespace GeometryUtils
 	{
 #pragma region Sphere HitTest
@@ -14,53 +25,84 @@ namespace dae
 		{
 			//return false;
 
-			float A{1}, B{}, C{}, D{};
+#pragma region normalSphereTest
 
-			const Vector3 rayMinSphereOrigin{ ray.origin - sphere.origin };
+			//float A{1}, B{}, C{}, D{};
 
-			A = Vector3::Dot(ray.direction, ray.direction);
+			//const Vector3 rayMinSphereOrigin{ ray.origin - sphere.origin };
 
-			B = Vector3::Dot(2 * ray.direction, rayMinSphereOrigin);
+			//A = Vector3::Dot(ray.direction, ray.direction);
 
-			C = Vector3::Dot(rayMinSphereOrigin, rayMinSphereOrigin) - Square(sphere.radius);
+			//B = Vector3::Dot(2 * ray.direction, rayMinSphereOrigin);
 
-			D = Square(B) - (4 * A * C);
+			//C = Vector3::Dot(rayMinSphereOrigin, rayMinSphereOrigin) - Square(sphere.radius);
 
-			/*B = Vector3::Dot(2 * ray.direction, rayMinSphereOrigin);
+			//D = Square(B) - (4 * A * C);
 
-			C = Vector3::Dot(rayMinSphereOrigin, rayMinSphereOrigin) - Square(sphere.radius);
+			///*B = Vector3::Dot(2 * ray.direction, rayMinSphereOrigin);
 
-			D = Square(B) - (4 * C);*/
+			//C = Vector3::Dot(rayMinSphereOrigin, rayMinSphereOrigin) - Square(sphere.radius);
 
-			//remaking the code because there is way tooooo many ifs, it could be way efficienter
+			//D = Square(B) - (4 * C);*/
 
-			//first calculating if it doesnt hit anything or the things it hit are negative or not allowed in case return false the rest you can return true and assign 
-			// the hitrecord
+			////remaking the code because there is way tooooo many ifs, it could be way efficienter
 
-			if (D < 0)
-			{
-				return false;
-			}
+			////first calculating if it doesnt hit anything or the things it hit are negative or not allowed in case return false the rest you can return true and assign 
+			//// the hitrecord
 
-			D = sqrtf(D);
-			// 
+			//if (D < 0)
+			//{
+			//	return false;
+			//}
 
-			float Atimes2{ 0.5f }; // = A = 1 A/2 = 0.5
+			//D = sqrtf(D);
+			//// 
+
+			//float Atimes2{ 0.5f }; // = A = 1 A/2 = 0.5
 
 
-			float t{ (-B - D) * Atimes2 };
-			//check if first intersection is allowed
-			if (t < ray.min || t > ray.max)
-			{
-				//if not check the second one
-				t = (-B + D) * Atimes2;
+			//float t{ (-B - D) * Atimes2 };
+			////check if first intersection is allowed
+			//if (t < ray.min || t > ray.max)
+			//{
+			//	//if not check the second one
+			//	t = (-B + D) * Atimes2;
 
-				if (t < ray.min || t > ray.max)
-				{
-					//both arent allowed so return false
-					return false;
-				}
-			}
+			//	if (t < ray.min || t > ray.max)
+			//	{
+			//		//both arent allowed so return false
+			//		return false;
+			//	}
+			//}
+
+			//if (!ignoreHitRecord)
+			//{
+			//	hitRecord.didHit = true;
+			//	hitRecord.materialIndex = sphere.materialIndex;
+			//	hitRecord.origin = ray.origin + (ray.direction * t);
+			//	hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+			//	hitRecord.t = t;
+			//}
+
+			//return true;
+
+#pragma endregion
+
+			const Vector3 ToCenter { sphere.origin - ray.origin };
+
+			const float ray2PointLength { Vector3::Dot(ToCenter, ray.direction) };
+
+			const float center2PointSquared { ToCenter.SqrMagnitude() - Square(ray2PointLength) };
+
+			const float pointToHitPointSquared { Square(sphere.radius) - center2PointSquared };
+
+			if (pointToHitPointSquared < 0) return false;
+
+			const float pointToHitPoint{ Utils::FastSqrt(pointToHitPointSquared) };
+
+			const float t { ray2PointLength - pointToHitPoint };
+
+			if (t < ray.min || t > ray.max) return false;
 
 			if (!ignoreHitRecord)
 			{
@@ -156,6 +198,7 @@ namespace dae
 			return HitTest_Sphere(sphere, ray, temp, true);
 		}
 #pragma endregion
+
 #pragma region Plane HitTest
 		//PLANE HIT-TESTS
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
@@ -259,11 +302,11 @@ namespace dae
 
 #pragma endregion
 
-			const float EPSILON{ 0.0001f };
+			const float EPSILON{ 0.001f };
 
-			Vector3 edge1, edge2, h, s, q;
+			Vector3 edge1{}, edge2{}, h{}, s{}, q{};
 
-			float D, f, u, v;
+			float D{}, f{}, u{}, v{};
 
 			edge1 = triangle.v1 - triangle.v0;
 			edge2 = triangle.v2 - triangle.v0;
@@ -430,6 +473,13 @@ namespace dae
 
 	namespace Utils
 	{
+
+		//// Fast Sqrt	Source: https://geometrian.com/programming/tutorials/fastsqrt/index.php
+		//inline float FastSqrt(float arg)
+		//{
+		//	return _mm_cvtss_f32(_mm_sqrt_ss(_mm_set_ps1(arg)));
+		//}
+
 		//Just parses vertices and indices
 #pragma warning(push)
 #pragma warning(disable : 4505) //Warning unreferenced local function
@@ -501,5 +551,8 @@ namespace dae
 			return true;
 		}
 #pragma warning(pop)
+
+		
+
 	}
 }

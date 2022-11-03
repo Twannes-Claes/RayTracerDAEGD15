@@ -103,8 +103,8 @@ void Renderer::Render(Scene* pScene) const
 void dae::Renderer::RenderPixel(Scene* scenePtr, uint32_t pixelIndex, float fov, float aspectRatio, const Camera& camera, const std::vector<Light>& lights, const std::vector<Material*>& materials) const
 {
 
-	int px{ int(pixelIndex) % m_Width };
-	int py{ int(pixelIndex) / m_Width };
+	const int px{ static_cast<int>(pixelIndex) % m_Width };
+	const int py{ static_cast<int>(pixelIndex) / m_Width };
 
 	const float halfPixel{ 0.5f };
 
@@ -129,7 +129,7 @@ void dae::Renderer::RenderPixel(Scene* scenePtr, uint32_t pixelIndex, float fov,
 	{
 		const float epsilon{ 0.001f };
 
-		closestHit.origin = closestHit.origin + (closestHit.normal * epsilon);
+		closestHit.origin += (closestHit.normal * epsilon);
 
 		for (int i{}; i < lights.size(); ++i)
 		{
@@ -177,7 +177,7 @@ void dae::Renderer::RenderPixel(Scene* scenePtr, uint32_t pixelIndex, float fov,
 
 				if (observedArea >= 0.f)
 				{
-					areaColor = ColorRGB{ 1.f,1.f,1.f } *observedArea;
+					areaColor = ColorRGB{ 1.f,1.f,1.f } * observedArea;
 				}
 
 				finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin) * areaColor * materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, -viewRay.direction);

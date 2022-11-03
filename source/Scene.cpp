@@ -34,7 +34,7 @@ namespace dae {
 
 		HitRecord tempHit{};
 		
-		for (int i{}; i < m_SphereGeometries.size(); i++)
+		for (int i{}; i < m_SphereGeometries.size(); ++i)
 		{
 			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray, tempHit))
 			{
@@ -45,7 +45,7 @@ namespace dae {
 			}
 		}
 
-		for (int i{}; i < m_PlaneGeometries.size(); i++)
+		for (int i{}; i < m_PlaneGeometries.size(); ++i)
 		{
 			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray, tempHit))
 			{
@@ -56,7 +56,7 @@ namespace dae {
 			}
 		}
 
-		for (int i{}; i < m_TriangleMeshGeometries.size(); i++)
+		for (int i{}; i < m_TriangleMeshGeometries.size(); ++i)
 		{
 			if (GeometryUtils::HitTest_TriangleMesh(m_TriangleMeshGeometries[i], ray, tempHit))
 			{
@@ -72,7 +72,7 @@ namespace dae {
 	bool Scene::DoesHit(const Ray& ray) const
 	{
 
-		for (int i = 0; i < m_SphereGeometries.size(); i++)
+		for (int i = 0; i < m_SphereGeometries.size(); ++i)
 		{
 			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray))
 			{
@@ -80,7 +80,7 @@ namespace dae {
 			}
 		} 
 
-		for (int i = 0; i < m_PlaneGeometries.size(); i++)
+		for (int i = 0; i < m_PlaneGeometries.size(); ++i)
 		{
 			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray))
 			{
@@ -88,7 +88,7 @@ namespace dae {
 			}
 		}
 
-		for (int i = 0; i < m_TriangleMeshGeometries.size(); i++)
+		for (int i = 0; i < m_TriangleMeshGeometries.size(); ++i)
 		{
 			if (GeometryUtils::HitTest_TriangleMesh(m_TriangleMeshGeometries[i], ray))
 			{

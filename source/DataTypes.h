@@ -132,13 +132,14 @@ namespace dae
 
 		void CalculateNormals()
 		{
-			normals.resize(indices.size() / 3);
+			normals.clear();
+			normals.reserve(indices.size() / 3);
 
 			for (int i{}; i < indices.size();  i +=3)
 			{
 				Vector3 v0 = positions[indices[i]];
 
-				normals[i/3] = Vector3::Cross(positions[indices[i + 1]] - v0, positions[indices[i + 2]] - v0).Normalized();
+				normals.emplace_back(Vector3::Cross(positions[indices[i + 1]] - v0, positions[indices[i + 2]] - v0).Normalized());
 			}
 		}
 
