@@ -30,7 +30,7 @@ namespace dae
 
 		bool SaveBufferToImage() const;
 
-		void CycleLightingMode();
+		void CycleLightingMode() { m_CurrentLightingMode = static_cast<LightingMode>((static_cast<int>(m_CurrentLightingMode) + 1) % LightingModeSize); }
 
 		void ToggleShadow() { m_ShadowsEnabled = !m_ShadowsEnabled; }
 
@@ -48,7 +48,7 @@ namespace dae
 			Combined,
 		};
 
-	
+		const int LightingModeSize = 4;
 
 		LightingMode m_CurrentLightingMode{ LightingMode::Combined };
 
@@ -64,7 +64,6 @@ namespace dae
 		int m_Height{};
 
 		float m_AspectRatio{};
-
 
 	};
 }

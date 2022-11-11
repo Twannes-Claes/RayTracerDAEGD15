@@ -8,7 +8,7 @@ namespace dae {
 #pragma region Base Scene
 	//Initialize Scene with Default Solid Color Material (RED)
 	Scene::Scene():
-		m_Materials({ new Material_SolidColor({1,0,0})})
+		m_pMaterials({ new Material_SolidColor({1,0,0})})
 	{
 		m_SphereGeometries.reserve(32);
 		m_PlaneGeometries.reserve(32);
@@ -18,13 +18,13 @@ namespace dae {
 
 	Scene::~Scene()
 	{
-		for(auto& pMaterial : m_Materials)
+		for(auto& pMaterial : m_pMaterials)
 		{
 			delete pMaterial;
 			pMaterial = nullptr;
 		}
 
-		m_Materials.clear();
+		m_pMaterials.clear();
 
 		// std::cout << "I deleted\n";
 	}
@@ -74,26 +74,22 @@ namespace dae {
 
 		for (int i = 0; i < m_SphereGeometries.size(); ++i)
 		{
-			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray))
-			{
-				return true;
-			}
+
+			if (GeometryUtils::HitTest_Sphere(m_SphereGeometries[i], ray)) return true;
+
 		} 
 
 		for (int i = 0; i < m_PlaneGeometries.size(); ++i)
 		{
-			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray))
-			{
-				return true;
-			}
+
+			if (GeometryUtils::HitTest_Plane(m_PlaneGeometries[i], ray)) return true;
+
 		}
 
 		for (int i = 0; i < m_TriangleMeshGeometries.size(); ++i)
 		{
-			if (GeometryUtils::HitTest_TriangleMesh(m_TriangleMeshGeometries[i], ray))
-			{
-				return true;
-			}
+
+			if (GeometryUtils::HitTest_TriangleMesh(m_TriangleMeshGeometries[i], ray)) return true;
 		}
 
 		return false;
@@ -158,8 +154,8 @@ namespace dae {
 
 	unsigned char Scene::AddMaterial(Material* pMaterial)
 	{
-		m_Materials.push_back(pMaterial);
-		return static_cast<unsigned char>(m_Materials.size() - 1);
+		m_pMaterials.push_back(pMaterial);
+		return static_cast<unsigned char>(m_pMaterials.size() - 1);
 	}
 #pragma endregion
 #pragma endregion
@@ -352,21 +348,31 @@ namespace dae {
 
 		m_pMeshes[0] = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matLambert_White);
 		m_pMeshes[0]->AppendTriangle(baseTriangle, true);
+		//m_pMeshes[0]->pBVHNode = new BVHNode[m_pMeshes[0]->indices.size() / 3 * 2 - 1]{};
 		m_pMeshes[0]->Translate({ -1.75f, 4.5f, 0.0f });
 		m_pMeshes[0]->UpdateAABB();
 		m_pMeshes[0]->UpdateTransforms();
 
+		//m_pMeshes[0]->BuildBVH();
+
 		m_pMeshes[1] = AddTriangleMesh(TriangleCullMode::FrontFaceCulling, matLambert_White);
 		m_pMeshes[1]->AppendTriangle(baseTriangle, true);
+		//m_pMeshes[1]->pBVHNode = new BVHNode[m_pMeshes[1]->indices.size() / 3 * 2 - 1]{};
 		m_pMeshes[1]->Translate({ 0.0f, 4.5f, 0.0f });
 		m_pMeshes[1]->UpdateAABB();
 		m_pMeshes[1]->UpdateTransforms();
 
+		//m_pMeshes[1]->BuildBVH();
+
 		m_pMeshes[2] = AddTriangleMesh(TriangleCullMode::NoCulling, matLambert_White);
 		m_pMeshes[2]->AppendTriangle(baseTriangle, true);
+		//m_pMeshes[2]->pBVHNode = new BVHNode[m_pMeshes[2]->indices.size() / 3 * 2 - 1]{};
 		m_pMeshes[2]->Translate({ 1.75f, 4.5f, 0.0f });
 		m_pMeshes[2]->UpdateAABB();
 		m_pMeshes[2]->UpdateTransforms();
+
+		//m_pMeshes[2]->BuildBVH();
+
 
 		//Light
 		AddPointLight(Vector3{ 0.0f, 5.0f, 5.0f }, 50.f, ColorRGB{ 1.0f, 0.61f, 0.45f }); // Backlight
@@ -383,6 +389,8 @@ namespace dae {
 		{
 			m->RotateY(yawAngle);
 			m->UpdateTransforms();
+
+			//m->BuildBVH();
 		}
 	}
 	void Scene_W4_Bunny::Initialize()
@@ -405,11 +413,14 @@ namespace dae {
 
 		Utils::ParseOBJ("Resources/lowpoly_bunny2.obj", m_pMesh->positions, m_pMesh->normals, m_pMesh->indices);
 
+		m_pMesh->pBVHNode = new BVHNode[m_pMesh->indices.size()/3 * 2 -1]{};
 
 		m_pMesh->Scale({ 2.f, 2.f, 2.f });
 
 		m_pMesh->UpdateAABB();
 		m_pMesh->UpdateTransforms();
+
+		m_pMesh->BuildBVH();
 
 		//Light
 		AddPointLight(Vector3{ 0.f, 5.f, 5.f }, 50.f, ColorRGB{ 1.f, 0.61f, .45f });//backLight
@@ -424,6 +435,8 @@ namespace dae {
 
 		m_pMesh->RotateY(yawAngle);
 		m_pMesh->UpdateTransforms();
+
+		m_pMesh->BuildBVH();
 	}
 }
 

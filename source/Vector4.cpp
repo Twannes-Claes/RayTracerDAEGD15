@@ -43,7 +43,7 @@ namespace dae
 	}
 
 #pragma region Operator Overloads
-	Vector4 Vector4::operator*(float scale) const
+	Vector4 Vector4::operator*(const float scale) const
 	{
 		return { x * scale, y * scale, z * scale, w * scale };
 	}
@@ -67,7 +67,7 @@ namespace dae
 		return *this;
 	}
 
-	float& Vector4::operator[](int index)
+	float& Vector4::operator[](const int index)
 	{
 		assert(index <= 3 && index >= 0);
 
@@ -77,7 +77,7 @@ namespace dae
 		return w;
 	}
 
-	float Vector4::operator[](int index) const
+	float Vector4::operator[](const int index) const
 	{
 		assert(index <= 3 && index >= 0);
 

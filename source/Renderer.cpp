@@ -32,8 +32,8 @@ Renderer::Renderer(SDL_Window * pWindow) :
 void Renderer::Render(Scene* pScene) const
 {
 	Camera& camera = pScene->GetCamera();
-	auto& materials = pScene->GetMaterials();
-	auto& lights = pScene->GetLights();
+	const auto& materials = pScene->GetMaterials();
+	const auto& lights = pScene->GetLights();
 
 	float fov = tanf((camera.fovAngle / 2) * TO_RADIANS);
 
@@ -111,13 +111,9 @@ void dae::Renderer::RenderPixel(Scene* scenePtr, uint32_t pixelIndex, float fov,
 	float cx = (((2 * ( px + halfPixel)) / m_Width) - 1) * m_AspectRatio * fov;
 	float cy = (1 - ((2 * ( py + halfPixel)) / m_Height)) * fov;
 
-	Vector3 rayDirection{ cx, cy, 1.f};
+	Vector3 rayDirection{ camera.cameraToWorld.TransformVector({cx, cy, 1.f }).Normalized()};
 
-	rayDirection.Normalize();
-
-	rayDirection = camera.cameraToWorld.TransformVector(rayDirection);
-
-	Ray viewRay{ camera.origin, rayDirection };
+	const Ray viewRay{ camera.origin, rayDirection };
 
 	ColorRGB finalColor{};
 
@@ -131,16 +127,16 @@ void dae::Renderer::RenderPixel(Scene* scenePtr, uint32_t pixelIndex, float fov,
 
 		closestHit.origin += (closestHit.normal * epsilon);
 
-		for (int i{}; i < lights.size(); ++i)
+		for (const Light& light : lights)
 		{
 
-			Vector3 lightDirection = LightUtils::GetDirectionToLight(lights[i], closestHit.origin);
+			Vector3 lightDirection = LightUtils::GetDirectionToLight(light, closestHit.origin);
 
-			float magnitude{ lightDirection.Normalize() };
+			const float magnitude{ lightDirection.Normalize() };
 
 			if (m_ShadowsEnabled)
 			{
-				Ray shadowRay{ closestHit.origin, lightDirection, epsilon, magnitude };
+				const Ray shadowRay{ closestHit.origin, lightDirection, epsilon, magnitude };
 
 				if (scenePtr->DoesHit(shadowRay))
 				{
@@ -148,46 +144,44 @@ void dae::Renderer::RenderPixel(Scene* scenePtr, uint32_t pixelIndex, float fov,
 				}
 			}
 
-			float observedArea{ Vector3::Dot(closestHit.normal, lightDirection) };
+			const float observedArea{ Vector3::Dot(closestHit.normal, lightDirection) };
+
+			if (observedArea < epsilon) continue;
 
 			switch (m_CurrentLightingMode)
 			{
-			case dae::Renderer::LightingMode::ObservedArea:
-			{
-
-				if (observedArea >= 0.f) finalColor += ColorRGB{ 1.f,1.f,1.f } *observedArea;
-
-			}
-
-			break;
-			case dae::Renderer::LightingMode::Radiance:
-			{
-				finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin);
-
-				break;
-			}
-			case dae::Renderer::LightingMode::BRDF:
-
-				finalColor += materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, -viewRay.direction);
-
-				break;
-			case dae::Renderer::LightingMode::Combined:
-			{
-				ColorRGB areaColor{};
-
-				if (observedArea >= 0.f)
+				case dae::Renderer::LightingMode::ObservedArea:
 				{
-					areaColor = ColorRGB{ 1.f,1.f,1.f } * observedArea;
+
+					finalColor += ColorRGB{ 1.f,1.f,1.f } * observedArea;
+
 				}
 
-				finalColor += LightUtils::GetRadiance(lights[i], closestHit.origin) * areaColor * materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, -viewRay.direction);
-
 				break;
+				case dae::Renderer::LightingMode::Radiance:
+				{
+					finalColor += LightUtils::GetRadiance(light, closestHit.origin);
+
+					break;
+				}
+				case dae::Renderer::LightingMode::BRDF:
+
+					finalColor += materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, -viewRay.direction);
+
+					break;
+				case dae::Renderer::LightingMode::Combined:
+				{
+					ColorRGB areaColor{ ColorRGB{ 1.f,1.f,1.f } * observedArea };
+
+					finalColor += LightUtils::GetRadiance(light, closestHit.origin) * areaColor * materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, -viewRay.direction);
+
+					break;
+				}
+
+					default:
+					break;
 			}
 
-			default:
-				break;
-			}
 		}
 
 	}
@@ -204,9 +198,4 @@ void dae::Renderer::RenderPixel(Scene* scenePtr, uint32_t pixelIndex, float fov,
 bool Renderer::SaveBufferToImage() const
 {
 	return SDL_SaveBMP(m_pBuffer, "RayTracing_Buffer.bmp");
-}
-
-void dae::Renderer::CycleLightingMode()
-{
-	m_CurrentLightingMode = static_cast<LightingMode>((static_cast<int>(m_CurrentLightingMode) + 1) % 4);
 }

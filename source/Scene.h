@@ -40,7 +40,7 @@ namespace dae
 		const std::vector<Plane>& GetPlaneGeometries() const { return m_PlaneGeometries; }
 		const std::vector<Sphere>& GetSphereGeometries() const { return m_SphereGeometries; }
 		const std::vector<Light>& GetLights() const { return m_Lights; }
-		const std::vector<Material*> GetMaterials() const { return m_Materials; }
+		const std::vector<Material*> GetMaterials() const { return m_pMaterials; }
 
 	protected:
 		std::string	sceneName;
@@ -49,7 +49,7 @@ namespace dae
 		std::vector<Sphere> m_SphereGeometries{};
 		std::vector<TriangleMesh> m_TriangleMeshGeometries{};
 		std::vector<Light> m_Lights{};
-		std::vector<Material*> m_Materials{};
+		std::vector<Material*> m_pMaterials{};
 		//std::vector<Triangle> m_Triangles{};
 
 		Camera m_Camera{};

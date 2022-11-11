@@ -4,6 +4,7 @@
 #include "Math.h"
 #include "DataTypes.h"
 #include <xmmintrin.h>
+#include <iostream>
 
 namespace dae
 {
@@ -23,7 +24,6 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//return false;
 
 #pragma region normalSphereTest
 
@@ -204,9 +204,7 @@ namespace dae
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 
-			//return false;
-
-			float t = { (Vector3::Dot(plane.origin - ray.origin, plane.normal)) / (Vector3::Dot(ray.direction, plane.normal)) };
+			const float t = { (Vector3::Dot(plane.origin - ray.origin, plane.normal)) / (Vector3::Dot(ray.direction, plane.normal)) };
 
 			if (t < ray.min || t > ray.max)
 			{
@@ -236,14 +234,11 @@ namespace dae
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 
-			//return false;
-
-			float dotNV{ Vector3::Dot(triangle.normal, ray.direction) };
+			const float dotNV{ Vector3::Dot(triangle.normal, ray.direction) };
 
 			if (dotNV == 0) { return false; }
 
 			TriangleCullMode cullMode{ triangle.cullMode };
-
 
 			if (ignoreHitRecord)
 			{
@@ -304,34 +299,30 @@ namespace dae
 
 			const float EPSILON{ 0.001f };
 
-			Vector3 edge1{}, edge2{}, h{}, s{}, q{};
+			const Vector3 edge1{ triangle.v1 - triangle.v0 };
+			const Vector3 edge2{ triangle.v2 - triangle.v0 };
 
-			float D{}, f{}, u{}, v{};
+			const Vector3 h { Vector3::Cross(ray.direction, edge2) };
 
-			edge1 = triangle.v1 - triangle.v0;
-			edge2 = triangle.v2 - triangle.v0;
-
-			h = Vector3::Cross(ray.direction, edge2);
-
-			D = Vector3::Dot(edge1, h);
+			const float D { Vector3::Dot(edge1, h) };
 
 			if (abs(D) < EPSILON) return false;
 
-			f = 1 / D;
+			const float f { 1 / D };
 
-			s = ray.origin - triangle.v0;
+			const Vector3 s { ray.origin - triangle.v0 };
 
-			u = f * Vector3::Dot(s, h);
+			const float u { f * Vector3::Dot(s, h) };
 
 			if (u < 0 || u > 1) return false;
 
-			q = Vector3::Cross(s, edge1);
+			const Vector3 q { Vector3::Cross(s, edge1) };
 
-			v = f * Vector3::Dot(ray.direction, q);
+			const float v { f * Vector3::Dot(ray.direction, q) };
 
 			if (v < 0 || u + v > 1) return false;
 
-			float t{ f * Vector3::Dot(edge2,q) };
+			const float t { f * Vector3::Dot(edge2,q) };
 
 			if (t < ray.min || t > ray.max) return false;
 
@@ -356,52 +347,97 @@ namespace dae
 #pragma endregion
 #pragma region TriangeMesh HitTest
 
-		inline bool SlabTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)
+		inline bool SlabTest_TriangleMesh(const Ray& ray, const Vector3& minAABB, const Vector3& maxAABB)
 		{
-			float inverseX { 1 / ray.direction.x};
-			float inverseY {1 / ray.direction.y};
-			float inverseZ {1 / ray.direction.z};
 
-			float tx1 = (mesh.transformedMinAABB.x - ray.origin.x) * inverseX;
-			float tx2 = (mesh.transformedMaxAABB.x - ray.origin.x) * inverseX;
+			const float tx1 {(minAABB.x - ray.origin.x) * ray.inverseDirection.x};
+			const float tx2 {(maxAABB.x - ray.origin.x) * ray.inverseDirection.x};
 
 			float tmin = std::min(tx1, tx2);
 			float tmax = std::max(tx1, tx2);
 
-			float ty1 = (mesh.transformedMinAABB.y - ray.origin.y) * inverseY;
-			float ty2 = (mesh.transformedMaxAABB.y - ray.origin.y) * inverseY;
+			const float ty1 {(minAABB.y - ray.origin.y) * ray.inverseDirection.y};
+			const float ty2 {(maxAABB.y - ray.origin.y) * ray.inverseDirection.y};
 
 			tmin = std::max(tmin, std::min(ty1, ty2));
 			tmax = std::min(tmax, std::max(ty1, ty2));
 
-			float tz1 = (mesh.transformedMinAABB.z - ray.origin.z) * inverseZ;
-			float tz2 = (mesh.transformedMaxAABB.z - ray.origin.z) * inverseZ;
+			const float tz1 {(minAABB.z - ray.origin.z) * ray.inverseDirection.z};
+			const float tz2 {(maxAABB.z - ray.origin.z) * ray.inverseDirection.z};
 
 			tmin = std::max(tmin, std::min(tz1, tz2));
 			tmax = std::min(tmax, std::max(tz1, tz2));
 
 			return tmax > 0 && tmax >= tmin;
+
+		}
+
+		inline void IntersectBVH(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, HitRecord& tempHit, bool& hasHit, size_t nodeIdx, bool ignoreHitRecord)
+		{
+			const BVHNode& node{ mesh.pBVHNode[nodeIdx] };
+
+			if (!SlabTest_TriangleMesh(ray, node.minAABB, node.maxAABB)) return;
+
+			if (node.IsLeaf())
+			{
+				Triangle tempTriangle{};
+				tempTriangle.cullMode = mesh.cullMode;
+				tempTriangle.materialIndex = mesh.materialIndex;
+
+				for (uint32_t currTriangleIdx{}; currTriangleIdx < node.IndiceCount; currTriangleIdx += 3)
+				{
+
+					const size_t indicePlusCurrIdx{ node.firstIndice + currTriangleIdx };
+
+					tempTriangle.normal = mesh.transformedNormals[indicePlusCurrIdx /3];
+
+					tempTriangle.v0 = mesh.transformedPositions[mesh.indices[indicePlusCurrIdx]];
+					tempTriangle.v1 = mesh.transformedPositions[mesh.indices[indicePlusCurrIdx + 1]];
+					tempTriangle.v2 = mesh.transformedPositions[mesh.indices[indicePlusCurrIdx + 2]];
+
+					if (HitTest_Triangle(tempTriangle, ray, tempHit, ignoreHitRecord))
+					{
+						hasHit = true;
+
+						if (ignoreHitRecord)
+						{
+							return;
+						}
+
+						if (tempHit.t < hitRecord.t)
+						{
+							hitRecord = tempHit; 
+						}
+					}
+				}
+			}
+			else
+			{
+				IntersectBVH(mesh, ray, hitRecord, tempHit, hasHit, node.leftNode, ignoreHitRecord);
+				IntersectBVH(mesh, ray, hitRecord, tempHit, hasHit, node.leftNode + 1, ignoreHitRecord);
+			}
 		}
 
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//return false;
-
-			if (!SlabTest_TriangleMesh(mesh, ray))
-			{ 
-				return false; 
-			}
+//#define BVH
 
 			HitRecord tempHit{};
 
 			bool hasHit{ false };
+
+#ifndef BVH
+			if (!SlabTest_TriangleMesh(ray, mesh.transformedMinAABB, mesh.transformedMaxAABB))
+			{ 
+				return false; 
+			}
 
 			Triangle tempTriangle{};
 
 			tempTriangle.cullMode = mesh.cullMode;
 			tempTriangle.materialIndex = mesh.materialIndex;
 
-			for (int i{}; i < mesh.indices.size(); i+= 3)
+			for (int i{}; i < mesh.indices.size(); i += 3)
 			{
 				tempTriangle.normal = mesh.transformedNormals[i / 3];
 
@@ -409,7 +445,7 @@ namespace dae
 				tempTriangle.v1 = mesh.transformedPositions[mesh.indices[i + 1]];
 				tempTriangle.v2 = mesh.transformedPositions[mesh.indices[i + 2]];
 
-				if (HitTest_Triangle(tempTriangle,ray, tempHit, ignoreHitRecord))
+				if (HitTest_Triangle(tempTriangle, ray, tempHit, ignoreHitRecord))
 				{
 					hasHit = true;
 
@@ -424,8 +460,16 @@ namespace dae
 					}
 				}
 			}
+#endif
+
+#ifdef BVH
+
+			IntersectBVH(mesh, ray, hitRecord, tempHit, hasHit, mesh.pBVHNode->firstIndice, ignoreHitRecord);
+
+#endif
 
 			return hasHit;
+
 		}
 
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)
@@ -460,7 +504,7 @@ namespace dae
 			
 			if (light.type == LightType::Point)
 			{
-				Vector3 irridanceVector{ light.origin - target };
+				const Vector3 irridanceVector{ light.origin - target };
 
 				return light.color * (light.intensity / Vector3::Dot(irridanceVector, irridanceVector));
 			}

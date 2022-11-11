@@ -33,13 +33,11 @@ namespace dae
 		static ColorRGB Phong(float ks, float exp, const Vector3& l, const Vector3& v, const Vector3& n)
 		{
 
-			Vector3 reflect{ Vector3::Reflect(l, n) };
+			const Vector3 reflect{ Vector3::Reflect(l, n) };
 
-			float cosAngle{ Vector3::Dot(reflect, v) };
+			const float cosAngle{ Vector3::DotClamp(reflect, v) };
 
-			if (cosAngle < 0.f) cosAngle = 0.f;
-
-			float phongSpecular{ ks * powf(cosAngle, exp) };
+			const float phongSpecular{ ks * powf(cosAngle, exp) };
 
 			return ColorRGB{phongSpecular,phongSpecular ,phongSpecular };
 		}
@@ -80,13 +78,13 @@ namespace dae
 		 */
 		static float GeometryFunction_SchlickGGX(const Vector3& n, const Vector3& v, float roughness)
 		{
+
 			const float k{ Square(roughness + 1) * 0.125f};
 
-			float dotNV{ Vector3::Dot(n,v) };
-
-			if (dotNV < 0) dotNV = 0;
+			const float dotNV{ Vector3::DotClamp(n,v) };
 
 			return dotNV / ((dotNV * (1 - k)) + k);
+
 		}
 
 		/**

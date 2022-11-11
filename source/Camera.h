@@ -6,6 +6,7 @@
 #include "Math.h"
 #include "Timer.h"
 #include <iostream>
+#include <algorithm>
 
 namespace dae
 {
@@ -13,7 +14,7 @@ namespace dae
 	{
 		Camera() = default;
 
-		Camera(const Vector3& _origin, float _fovAngle):
+		Camera(const Vector3& _origin, const float _fovAngle):
 			origin{_origin},
 			fovAngle{_fovAngle}
 		{
@@ -30,7 +31,12 @@ namespace dae
 		float totalPitch{0.f};
 		float totalYaw{0.f};
 
+		const float minPitch{ -89.99f * TO_RADIANS };
+		const float maxPitch{ 89.99f * TO_RADIANS };
+
 		const float speed{ 10.f };
+
+		const int sprintSpeedMultiplier{ 3 };
 
 		Matrix cameraToWorld{};
 
@@ -39,7 +45,7 @@ namespace dae
 
 			right = Vector3::Cross(Vector3::UnitY, forward).Normalized();
 
-			up = Vector3::Cross(forward, right).Normalized();
+			up = Vector3::Cross(forward, right);
 
 			cameraToWorld = Matrix
 			{
@@ -66,9 +72,7 @@ namespace dae
 			float moveSpeed{ speed * deltaTime };
 			float rotSpeed{ (speed * TO_RADIANS) * deltaTime };
 
-			const int sprintSpeedMultiplier{ 3 };
-
-			moveSpeed = (pKeyboardState[SDL_SCANCODE_LSHIFT] * (sprintSpeedMultiplier) * moveSpeed) + moveSpeed;
+			moveSpeed = (pKeyboardState[SDL_SCANCODE_LSHIFT] * sprintSpeedMultiplier * moveSpeed) + moveSpeed;
 
 			origin += (pKeyboardState[SDL_SCANCODE_W] || pKeyboardState[SDL_SCANCODE_UP])  * forward * moveSpeed;
 			origin -= (pKeyboardState[SDL_SCANCODE_S] || pKeyboardState[SDL_SCANCODE_DOWN]) * forward * moveSpeed;
@@ -88,12 +92,13 @@ namespace dae
 			origin -= lrmb * up * (moveSpeed / 3) * float(mouseY);
 
 			totalPitch -= rmb * rotSpeed * mouseY;
+			totalPitch = std::clamp(totalPitch, minPitch, maxPitch);
+
 			totalYaw += lmb * rotSpeed * mouseX;
 			totalYaw += rmb * rotSpeed * mouseX;
 
 			forward = (Matrix::CreateRotationX(totalPitch) * Matrix::CreateRotationY(totalYaw)).TransformVector(Vector3::UnitZ);
 
-			forward.Normalize();
 		}
 	};
 }

@@ -20,10 +20,13 @@ namespace dae
 		Vector3 Normalized() const;
 
 		static float Dot(const Vector3& v1, const Vector3& v2);
+		static float DotClamp(const Vector3& v1, const Vector3& v2);
+
 		static Vector3 Cross(const Vector3& v1, const Vector3& v2);
 		static Vector3 Project(const Vector3& v1, const Vector3& v2);
 		static Vector3 Reject(const Vector3& v1, const Vector3& v2);
 		static Vector3 Reflect(const Vector3& v1, const Vector3& v2);
+		static float Sign(const Vector3& v1 , const Vector3& v2, const Vector3& v3);
 
 		static Vector3 Max(const Vector3& v1, const Vector3& v2);
 		static Vector3 Min(const Vector3& v1, const Vector3& v2);
@@ -51,6 +54,7 @@ namespace dae
 		static const Vector3 UnitY;
 		static const Vector3 UnitZ;
 		static const Vector3 Zero;
+		static const Vector3 Identity;
 	};
 
 	//Global Operators

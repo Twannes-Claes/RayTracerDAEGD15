@@ -32,7 +32,7 @@ namespace dae {
 		return TransformVector(v[0], v[1], v[2]);
 	}
 
-	Vector3 Matrix::TransformVector(float x, float y, float z) const
+	Vector3 Matrix::TransformVector(const float x, const float y, const float z) const
 	{
 		return Vector3{
 			data[0].x * x + data[1].x * y + data[2].x * z,
@@ -46,7 +46,7 @@ namespace dae {
 		return TransformPoint(p[0], p[1], p[2]);
 	}
 
-	Vector3 Matrix::TransformPoint(float x, float y, float z) const
+	Vector3 Matrix::TransformPoint(const float x, const float y, const float z) const
 	{
 		return Vector3{
 			data[0].x * x + data[1].x * y + data[2].x * z + data[3].x,
@@ -102,7 +102,7 @@ namespace dae {
 		return data[3];
 	}
 
-	Matrix Matrix::CreateTranslation(float x, float y, float z)
+	Matrix Matrix::CreateTranslation(const float x, const float y, const float z)
 	{	
 		Matrix matrix{};
 
@@ -118,7 +118,7 @@ namespace dae {
 		return { Vector3::UnitX, Vector3::UnitY, Vector3::UnitZ, t };
 	}
 
-	Matrix Matrix::CreateRotationX(float pitch)
+	Matrix Matrix::CreateRotationX(const float pitch)
 	{
 		Matrix matrix{};
 
@@ -130,7 +130,7 @@ namespace dae {
 		return matrix;
 	}
 
-	Matrix Matrix::CreateRotationY(float yaw)
+	Matrix Matrix::CreateRotationY(const float yaw)
 	{
 		Matrix matrix{};
 
@@ -142,7 +142,7 @@ namespace dae {
 		return matrix;
 	}
 
-	Matrix Matrix::CreateRotationZ(float roll)
+	Matrix Matrix::CreateRotationZ(const float roll)
 	{
 		Matrix matrix{};
 
@@ -156,19 +156,15 @@ namespace dae {
 
 	Matrix Matrix::CreateRotation(const Vector3& r)
 	{
-		Matrix matrix{};
-
-		matrix = CreateRotationX(r.x) * CreateRotationY(r.y) * CreateRotationZ(r.z);
-
-		return matrix;
+		return CreateRotationX(r.x) * CreateRotationY(r.y) * CreateRotationZ(r.z);
 	}
 
-	Matrix Matrix::CreateRotation(float pitch, float yaw, float roll)
+	Matrix Matrix::CreateRotation(const float pitch, const float yaw, const float roll)
 	{
 		return CreateRotation({ pitch, yaw, roll });
 	}
 
-	Matrix Matrix::CreateScale(float sx, float sy, float sz)
+	Matrix Matrix::CreateScale(const float sx, const float sy, const float sz)
 	{
 		Matrix matrix{};
 
@@ -185,13 +181,13 @@ namespace dae {
 	}
 
 #pragma region Operator Overloads
-	Vector4& Matrix::operator[](int index)
+	Vector4& Matrix::operator[](const int index)
 	{
 		assert(index <= 3 && index >= 0);
 		return data[index];
 	}
 
-	Vector4 Matrix::operator[](int index) const
+	Vector4 Matrix::operator[](const int index) const
 	{
 		assert(index <= 3 && index >= 0);
 		return data[index];
